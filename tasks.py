@@ -3,6 +3,7 @@ import os
 import os.path as op
 import platform
 import shutil
+import subprocess
 import tempfile
 import time
 from contextlib import contextmanager
@@ -12,7 +13,7 @@ from invoke import Collection, UnexpectedExit, task
 
 # Some default values
 PACKAGE_NAME = "ta_lib"
-ENV_PREFIX = "new_env"
+ENV_PREFIX = "house-price-prediction"
 ENV_PREFIX_PYSPARK = "ta-lib-pyspark"
 NUM_RETRIES = 10
 SLEEP_TIME = 1
@@ -973,49 +974,6 @@ def validate_env(
     else:
         print("You are all good!")
 
-    # env_files = [
-    #     op.join(CONDA_ENV_FOLDER, filename)
-    #     for filename in os.listdir(CONDA_ENV_FOLDER)
-    #     if fnmatch.fnmatch(filename, 'addon-*.yml')
-    #     # for env_file in os.listdir(CONDA_ENV_FOLDER)
-    #     # if (".yml" in env_file) # & (PLATFORM in env_file)
-    # ]
-    # env_files.append(op.join(CONDA_ENV_FOLDER, f"{platform}-{env}.yml"))
-    # expected_list = ["ta-lib==1.1.0"]
-
-    # for env_file in env_files:
-    #     with open(env_file) as fp:
-    #         env_cfg = yaml.safe_load(fp)
-    #         # print(env_cfg)
-    #     if 'dependencies' in env_cfg:
-    #         for i in env_cfg["dependencies"]:
-    #             if type(i) is not dict:
-    #                 expected_list.append(i)
-    #             else:
-    #                 expected_list = expected_list + i["pip"]
-
-    # def clean_package_name(s):
-    #     if "git+" in s:
-    #         s = s.split("/")[-1].split(".git")
-    #         s = s[0] + "==" + s[-1].split("v")[-1]
-    #     return s.replace("_", "-").lower()
-
-    # expected_list = [
-    #     clean_package_name(i)
-    #     for i in expected_list
-    #     if not ("nodejs" in i or "mlflow" in i or "tigerml" in i)
-    # ]
-
-    # with py_env(c, env_name):
-    #     import pkg_resources
-
-    #     installed_packages = pkg_resources.working_set
-    #     installed_packages_list = sorted(
-    #         ["%s==%s" % (i.key.lower(), i.version) for i in installed_packages]
-    #     )
-
-
-
 
 _create_task_collection(
     "test",
@@ -1123,6 +1081,47 @@ def start_ipython_shell(c, platform=PLATFORM, env=DEV_ENV):
     with py_env(c, env_name):
         c.run(f"""ipython -i "{startup_script}" """)
 
+@task
+def setup_env(ctx):
+    """
+    Ensures the development environment has Radon installed.
+    Installs Radon if not already available.
+    """
+    try:
+        # Check if Radon is installed
+        subprocess.run(["radon", "--version"], check=True)
+        print("Radon is already installed.")
+    except subprocess.CalledProcessError:
+        # Install Radon if not found
+        print("Radon not found. Installing Radon...")
+        ctx.run("conda install -c conda-forge radon -y", pty=True)
+
+@task(name="complexity")
+def complexity(ctx, path="src"):
+    """
+    Calculates the complexity score for the codebase using Radon.
+    Args:
+        path (str): The directory or file to analyze. Defaults to 'src'.
+    """
+    try:
+        # Check if Radon is installed
+        subprocess.run(["radon", "--version"], check=True)
+        print("Radon is already installed.")
+    except subprocess.CalledProcessError:
+        # Install Radon if not found
+        print("Radon not found. Installing Radon...")
+        ctx.run("conda install -c conda-forge radon -y", pty=True)
+    print(f"Running Radon complexity analysis on {path}...")
+
+    # Cyclomatic Complexity
+
+    ctx.run(f"radon cc {path} -a -nc", pty=True)
+
+    # Maintainability Index
+    ctx.run(f"radon mi {path}", pty=True)
+
+    print("Complexity analysis completed.")
+
 
 _create_task_collection(
     "launch",
@@ -1131,6 +1130,7 @@ _create_task_collection(
     start_tracker_ui,
     start_docs_server,
     start_ipython_shell,
+    complexity
 )
 
 

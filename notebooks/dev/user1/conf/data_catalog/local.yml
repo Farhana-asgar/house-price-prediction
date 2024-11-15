@@ -1,0 +1,38 @@
+datasets:
+  raw:
+    house-value-prediction:
+      type: ds
+      format: csv
+      uri: ${core.data_base_path}/raw/house-value-prediction/housing.csv
+      driver_params: {}
+  cleaned:
+    house-value-prediction:
+      type: ds
+      format: parquet
+      uri: ${core.data_base_path}/cleaned/house-value-prediction/housing.parquet
+      driver_params: {}
+  train:
+    house-value-prediction:
+      features:
+        type: ds
+        format: parquet
+        uri: ${core.data_base_path}/train/house-value-prediction/x_train.parquet
+        driver_params: {}
+      target:
+        type: ds
+        format: parquet
+        uri: ${core.data_base_path}/train/house-value-prediction/y_train.parquet
+        driver_params: {}
+  test:
+    house-value-prediction:
+      features:
+        type: ds
+        format: parquet
+        uri: ${core.data_base_path}/test/house-value-prediction/x_test.parquet
+        driver_params: {}
+      target:
+        type: ds
+        format: parquet
+        uri: ${core.data_base_path}/test/house-value-prediction/y_test.parquet
+        driver_params: {}
+
