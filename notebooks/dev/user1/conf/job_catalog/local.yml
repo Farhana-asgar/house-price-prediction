@@ -1,0 +1,30 @@
+jobs:
+  - name: train-test-split
+    test_size: 0.2
+    random_seed: 42
+  - name: model-creation
+    stages:
+      - name: 'ElasticNet Model'
+        tasks:
+          - name: 'train-model'
+            params: {
+              alpha: 0.5,
+              lmbd: 0.5,
+              max_itr: 1000
+            }
+      - name: 'Linear Regression Model'
+        tasks:
+          - name: 'train-model'
+            params: {
+              alpha: 0.5,
+              lmbd: 0.3,
+              max_itr: 1000,
+            }
+      - name: 'Bayesian Model'
+        tasks:
+          - name: 'train-model'
+            params: {
+              "draws": 10,
+              "tune": 10,
+              "inference_method": "mcmc"
+              }
